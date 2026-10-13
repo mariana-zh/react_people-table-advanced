@@ -9,7 +9,10 @@ import { useSearchParams } from 'react-router-dom';
 export const PeoplePage = () => {
   const [searchParams] = useSearchParams();
   const sex = searchParams.get('sex');
+  const query = searchParams.get('query') || '';
   const centuries = searchParams.getAll('centuries');
+  const sort = searchParams.get('sort');
+  const order = searchParams.get('order');
   const [people, setPeople] = useState<Person[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -25,7 +28,39 @@ export const PeoplePage = () => {
       return false;
     }
 
+    const normalizedQuery = query.toLowerCase();
+
+    if (
+      query &&
+      !person.name.toLowerCase().includes(normalizedQuery) &&
+      !person.motherName?.toLowerCase().includes(normalizedQuery) &&
+      !person.fatherName?.toLowerCase().includes(normalizedQuery)
+    ) {
+      return false;
+    }
+
     return true;
+  });
+
+  const sortedPeople = [...visible].sort((a, b) => {
+    let result = 0;
+
+    switch (sort) {
+      case 'name':
+      case 'sex':
+        result = a[sort].localeCompare(b[sort]);
+        break;
+
+      case 'born':
+      case 'died':
+        result = a[sort] - b[sort];
+        break;
+
+      default:
+        return 0;
+    }
+
+    return order === 'desc' ? -result : result;
   });
 
   useEffect(() => {
@@ -77,8 +112,12 @@ export const PeoplePage = () => {
                 </p>
               )}
 
-              {isLoaded && people.length > 0 && (
-                <PeopleTable people={visible} />
+              {isLoaded && people.length > 0 && visible.length === 0 && (
+                <p>There are no people matching the current search criteria</p>
+              )}
+
+              {isLoaded && visible.length > 0 && (
+                <PeopleTable people={sortedPeople} />
               )}
             </div>
           </div>

@@ -1,18 +1,27 @@
 import { useSearchParams } from 'react-router-dom';
 import { SearchLink } from './SearchLink';
 import cn from 'classnames';
+import { ChangeEvent } from 'react';
+import { getSearchWith } from '../utils/searchHelper';
+
+const CENTURIES = ['16', '17', '18', '19', '20'];
 
 export const PeopleFilters = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const sex = searchParams.get('sex');
+  const query = searchParams.get('query') || '';
   const centuries = searchParams.getAll('centuries');
+
+  const handleQueryChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchParams(
+      getSearchWith(searchParams, { query: event.target.value || null }),
+    );
+  };
 
   const toggleCentury = (century: string) =>
     centuries.includes(century)
       ? centuries.filter(c => c !== century)
       : [...centuries, century];
-
-  const CENTURIES = ['16', '17', '18', '19', '20'];
 
   return (
     <nav className="panel">
@@ -46,6 +55,8 @@ export const PeopleFilters = () => {
             type="search"
             className="input"
             placeholder="Search"
+            value={query}
+            onChange={handleQueryChange}
           />
 
           <span className="icon is-left">
@@ -86,9 +97,12 @@ export const PeopleFilters = () => {
       </div>
 
       <div className="panel-block">
-        <a className="button is-link is-outlined is-fullwidth" href="#/people">
+        <SearchLink
+          className="button is-link is-outlined is-fullwidth"
+          params={{ sex: null, query: null, centuries: null }}
+        >
           Reset all filters
-        </a>
+        </SearchLink>
       </div>
     </nav>
   );

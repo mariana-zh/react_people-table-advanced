@@ -1,7 +1,15 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import cn from 'classnames';
 import { Person } from '../types';
 import { PersonLink } from './PersonLink';
+import { SearchLink } from './SearchLink';
+
+const SORT_COLUMNS = [
+  { title: 'Name', field: 'name' },
+  { title: 'Sex', field: 'sex' },
+  { title: 'Born', field: 'born' },
+  { title: 'Died', field: 'died' },
+];
 
 type Props = {
   people: Person[];
@@ -9,6 +17,21 @@ type Props = {
 
 export const PeopleTable = ({ people }: Props) => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
+  const sort = searchParams.get('sort');
+  const order = searchParams.get('order');
+
+  const getSortParams = (field: string) => {
+    if (sort !== field) {
+      return { sort: field, order: null };
+    }
+
+    if (!order) {
+      return { sort: field, order: 'desc' };
+    }
+
+    return { sort: null, order: null };
+  };
 
   return (
     <table
@@ -17,10 +40,25 @@ export const PeopleTable = ({ people }: Props) => {
     >
       <thead>
         <tr>
-          <th>Name</th>
-          <th>Sex</th>
-          <th>Born</th>
-          <th>Died</th>
+          {SORT_COLUMNS.map(({ title, field }) => (
+            <th key={field}>
+              <span className="is-flex is-flex-wrap-nowrap">
+                {title}
+                <SearchLink params={getSortParams(field)}>
+                  <span className="icon">
+                    <i
+                      className={cn('fas', {
+                        'fa-sort': sort !== field,
+                        'fa-sort-up': sort === field && !order,
+                        'fa-sort-down': sort === field && order === 'desc',
+                      })}
+                    />
+                  </span>
+                </SearchLink>
+              </span>
+            </th>
+          ))}
+
           <th>Mother</th>
           <th>Father</th>
         </tr>
